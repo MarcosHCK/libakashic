@@ -14,8 +14,18 @@
 # You should have received a copy of the GNU General Public License
 # along with libakashic. If not, see <http://www.gnu.org/licenses/>.
 #
-ACLOCAL_AMFLAGS=-I m4 ${ACLOCAL_FLAGS}
 
-SUBDIRS=\
-	src \
-	test
+*.[ao]
+*.la
+*.lai
+*.lo
+*.Po
+*.Plo
+*.Tpo
+
+test
+
+test-suite.log
+
+test1.log
+test1.trs

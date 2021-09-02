@@ -1,3 +1,4 @@
+#!/bin/sh
 # Copyright 2021-2022 MarcosHCK
 # This file is part of libakashic.
 #
@@ -14,8 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with libakashic. If not, see <http://www.gnu.org/licenses/>.
 #
-ACLOCAL_AMFLAGS=-I m4 ${ACLOCAL_FLAGS}
 
-SUBDIRS=\
-	src \
-	test
+echo 1..1
+
+if [ ./test ]; then
+  echo "ok 1"
+else
+  echo "not ok 1 - Test crashed"
+fi
+
+exit 0

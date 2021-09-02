@@ -15,46 +15,9 @@
  *  along with libakashic. If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#include <config.h>
+#ifndef __LIBAKASHIC__
+#define __LIBAKASHIC__
+
 #include <aks_file.h>
 
-/*
- * Object definition
- *
- */
-
-struct _AksFile
-{
-  GObject parent_instance;
-};
-
-G_DEFINE_TYPE
-(AksFile,
- aks_file,
- G_TYPE_OBJECT);
-
-static
-void aks_file_class_init(AksFileClass* klass) {
-}
-
-static
-void aks_file_init(AksFile* self) {
-}
-
-/*
- * Object methods
- *
- */
-
-AksFile*
-aks_file_new(GInputStream  *base_stream,
-             GCancellable  *cancellable,
-             GError       **error)
-{
-  return g_initable_new
-  (AKS_TYPE_FILE,
-   cancellable,
-   error,
-   "base-stream", base_stream,
-   NULL);
-}
+#endif // __LIBAKASHIC__

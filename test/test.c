@@ -16,45 +16,10 @@
  *
  */
 #include <config.h>
-#include <aks_file.h>
+#include <libakashic.h>
+#include <stdio.h>
 
-/*
- * Object definition
- *
- */
-
-struct _AksFile
-{
-  GObject parent_instance;
-};
-
-G_DEFINE_TYPE
-(AksFile,
- aks_file,
- G_TYPE_OBJECT);
-
-static
-void aks_file_class_init(AksFileClass* klass) {
-}
-
-static
-void aks_file_init(AksFile* self) {
-}
-
-/*
- * Object methods
- *
- */
-
-AksFile*
-aks_file_new(GInputStream  *base_stream,
-             GCancellable  *cancellable,
-             GError       **error)
-{
-  return g_initable_new
-  (AKS_TYPE_FILE,
-   cancellable,
-   error,
-   "base-stream", base_stream,
-   NULL);
+int main() {
+  printf("ok\r\n");
+return 0;
 }
