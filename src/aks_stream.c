@@ -287,6 +287,22 @@ void aks_stream_class_init(AksStreamClass* klass) {
   iclass->skip_finish = aks_stream_class_skip_finish;
   oclass->set_property = aks_stream_class_set_property;
   oclass->dispose = aks_stream_class_dispose;
+
+/*
+ * Properties
+ *
+ */
+  properties[prop_archive] =
+    g_param_spec_pointer("archive",
+                         "archive",
+                         "archive",
+                         G_PARAM_WRITABLE
+                         | G_PARAM_CONSTRUCT_ONLY
+                         | G_PARAM_STATIC_STRINGS);
+
+  g_object_class_install_properties(oclass,
+                                    prop_number,
+                                    properties);
 }
 
 static
