@@ -17,6 +17,7 @@
  */
 #include <config.h>
 #include <aks_file_private.h>
+#include <aks_stream.h>
 
 static GFile*
 aks_file_g_file_iface_dup(GFile* pself) {
@@ -219,7 +220,10 @@ peek_stream(AksFile* self,
  *
  */
   stream =
-  g_object_new(G_TYPE_MEMORY_INPUT_STREAM, NULL);
+  g_object_new
+  (AKS_TYPE_STREAM,
+   "archive", ar,
+   NULL);
 
   _aks_archive_switch_source_object
   (G_OBJECT(self),

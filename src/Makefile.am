@@ -64,6 +64,7 @@ libakashic_la_SOURCES=\
 	aks_file.c \
 	aks_file_iface.c \
 	aks_file_node.c \
+	aks_stream.c \
 	$(VOID)
 
 libakashic_la_CFLAGS=\
