@@ -249,11 +249,13 @@ peek_stream(AksFile* self,
 
 _error_:
   if G_UNLIKELY(success == FALSE)
+  {
     g_clear_object(&stream);
-  if G_UNLIKELY(ar != NULL)
-    _aks_archive_read_free
-    (G_OBJECT(self),
-     ar);
+    if G_UNLIKELY(ar != NULL)
+      _aks_archive_read_free
+      (G_OBJECT(self),
+       ar);
+  }
 return stream;
 }
 
