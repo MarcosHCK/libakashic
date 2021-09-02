@@ -618,6 +618,7 @@ void aks_file_init(AksFile* self) {
 GFile*
 aks_file_new(GInputStream  *base_stream,
              AksCacheLevel  cache_level,
+             const gchar   *filename,
              GCancellable  *cancellable,
              GError       **error)
 {
@@ -628,12 +629,14 @@ aks_file_new(GInputStream  *base_stream,
    error,
    "base-stream", base_stream,
    "cache-level", cache_level,
+   "filename", filename,
    NULL);
 }
 
 void
 aks_file_new_async(GInputStream        *base_stream,
                    AksCacheLevel        cache_level,
+                   const gchar         *filename,
                    int                  io_priority,
                    GCancellable        *cancellable,
                    GAsyncReadyCallback  callback,
@@ -647,6 +650,7 @@ aks_file_new_async(GInputStream        *base_stream,
    user_data,
    "base-stream", base_stream,
    "cache-level", cache_level,
+   "filename", filename,
    NULL);
 }
 

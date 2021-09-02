@@ -81,11 +81,13 @@ struct _AksFileClass
 GFile*
 aks_file_new(GInputStream  *base_stream,
              AksCacheLevel  cache_level,
+             const gchar   *filename,
              GCancellable  *cancellable,
              GError       **error);
 void
 aks_file_new_async(GInputStream        *base_stream,
                    AksCacheLevel        cache_level,
+                   const gchar         *filename,
                    int                  io_priority,
                    GCancellable        *cancellable,
                    GAsyncReadyCallback  callback,
