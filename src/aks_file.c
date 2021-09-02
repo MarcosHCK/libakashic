@@ -394,7 +394,6 @@ init_fn(GTask* task,
 _error_:
   if G_LIKELY(success == TRUE)
     g_task_return_boolean(task, TRUE);
-  else
   if G_UNLIKELY(ar != NULL)
     _aks_archive_read_free(G_OBJECT(self), ar);
 }
