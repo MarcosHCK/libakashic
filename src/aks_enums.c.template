@@ -1,0 +1,55 @@
+/*** BEGIN file-header ***/
+/*  Copyright 2021-2022 MarcosHCK
+ *  This file is part of libakashic.
+ *
+ *  libakashic is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  libakashic is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with libakashic.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+#include <config.h>
+/*** END file-header ***/
+
+/*** BEGIN file-production ***/
+
+/* enumerations from "@basename@" */
+#include <@basename@>
+/*** END file-production ***/
+
+/*** BEGIN value-header ***/
+
+GType
+@enum_name@_get_type (void)
+{
+  static
+  volatile gsize g_@type@_type_id__volatile;
+  if (g_once_init_enter (&g_@type@_type_id__volatile))
+  {
+    static
+    const G@Type@Value values[] = {
+/*** END value-header ***/
+
+/*** BEGIN value-production ***/
+      {@VALUENAME@, "@VALUENAME@", "@valuenick@"},
+/*** END value-production ***/
+
+/*** BEGIN value-tail ***/
+      { 0, NULL, NULL }
+    };
+
+    GType g_@type@_type_id =
+    g_@type@_register_static(g_intern_static_string("@EnumName@"), values);
+    g_once_init_leave (&g_@type@_type_id__volatile, g_@type@_type_id);
+  }
+return g_@type@_type_id__volatile;
+}
+/*** END value-tail ***/

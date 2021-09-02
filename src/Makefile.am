@@ -34,8 +34,23 @@ VOID=
 #
 
 EXTRA_DIST+=\
+	aks_file_private.h \
 	$(VOID)
 
+#
+# Source files where
+# at least an enum is defined
+#
+ENUM_FILES=\
+	aks_enums.h \
+	$(VOID)
+
+aks_enums.c: $(ENUM_FILES) aks_enums.c.template
+	$(GLIB_MKENUMS) --symbol-prefix "aks" \
+									--identifier-prefix "Aks" \
+									--template "aks_enums.c.template" \
+									--output $@ \
+									$(ENUM_FILES)
 
 #
 # Binaries and libraries
@@ -44,15 +59,27 @@ EXTRA_DIST+=\
 lib_LTLIBRARIES=libakashic.la
 
 libakashic_la_SOURCES=\
+	aks_archive.c \
+	aks_enums.c \
 	aks_file.c \
+	aks_file_iface.c \
+	aks_file_node.c \
 	$(VOID)
 
 libakashic_la_CFLAGS=\
 	$(GIO_CFLAGS) \
 	$(GLIB_CFLAGS) \
+	$(LIBARCHIVE_CFLAGS) \
+	$(VOID)
+
+libakashic_la_LIBADD=\
+	$(GIO_LIBS) \
+	$(GLIB_LIBS) \
+	$(LIBARCHIVE_LIBS) \
 	$(VOID)
 
 libakashic_la_LDFLAGS=\
-	$(GIO_LIBS) \
-	$(GLIB_LIBS) \
+	-rpath ${libdir} \
+	-release ${PACKAGE_RELEASE} \
+	-version-info ${PACKAGE_VERSION_MAYOR}:${PACKAGE_VERSION_MINOR}:${PACKAGE_VERSION_MICRO} \
 	$(VOID)

@@ -19,7 +19,64 @@
 #include <libakashic.h>
 #include <stdio.h>
 
-int main() {
-  printf("ok\r\n");
-return 0;
+typedef struct _AksFileFixture AksFileFixture;
+struct _AksFileFixture
+{
+  GInputStream* input;
+  AksFile* file;
+};
+
+static
+void aks_file_fixture_set_up(AksFileFixture* fixture,
+                             gconstpointer user_data)
+{
+  GError* tmp_err = NULL;
+  GInputStream* stream;
+  AksFile* file;
+
+  GFile* file_ =
+  g_file_new_for_path("test.a");
+
+  stream = (GInputStream*)
+  g_file_read(file_, NULL, &tmp_err);
+  g_object_unref(file_);
+
+  g_assert_no_error(tmp_err);
+
+  file = (AksFile*)
+  aks_file_new(stream, AKS_CACHE_LEVEL_OTF, NULL, &tmp_err);
+
+  g_assert_no_error(tmp_err);
+
+  fixture->input = stream;
+  fixture->file = file;
+}
+
+static
+void aks_file_fixture_tear_down(AksFileFixture* fixture,
+                                gconstpointer user_data)
+{
+  g_clear_object(&(fixture->input));
+  g_clear_object(&(fixture->file));
+}
+
+static
+void aks_file_fixture_test1(AksFileFixture* fixture,
+                            gconstpointer user_data)
+{
+  const gchar* path = g_file_peek_path(G_FILE(fixture->file));
+  g_assert_cmpstr(path, ==, "/");
+}
+
+int main(int argc, char* argv[]) {
+  g_test_init(&argc, &argv, NULL);
+
+  g_test_add
+  ("/libakashic/aks_file",
+   AksFileFixture,
+   NULL,
+   aks_file_fixture_set_up,
+   aks_file_fixture_test1,
+   aks_file_fixture_tear_down);
+return g_test_run();
 }

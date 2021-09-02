@@ -15,10 +15,18 @@
  *  along with libakashic. If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#ifndef __LIBAKASHIC__
-#define __LIBAKASHIC__
+#ifndef __LIBAKASHIC_AKS_ENUMS__
+#define __LIBAKASHIC_AKS_ENUMS__
+#include <glib-object.h>
 
-#include <aks_enums.h>
-#include <aks_file.h>
+typedef enum {
+  AKS_CACHE_LEVEL_NONE,
+  AKS_CACHE_LEVEL_OTF,
+  AKS_CACHE_LEVEL_FULL,
+} AksCacheLevel;
 
-#endif // __LIBAKASHIC__
+GType
+aks_cache_level_get_type();
+#define AKS_TYPE_CACHE_LEVEL (aks_cache_level_get_type())
+
+#endif // __LIBAKASHIC_AKS_ENUMS__

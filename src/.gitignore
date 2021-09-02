@@ -25,3 +25,7 @@
 
 libakashic.so
 libakashic.so.*
+libakashic-*.so
+libakashic-*.so.*
+
+aks_enums.c

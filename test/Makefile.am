@@ -45,7 +45,7 @@ TEST_LOG_DRIVER=\
 	env AM_TAP_AWK='$(AWK)' $(SHELL) \
 	$(top_srcdir)/test/tap-driver.sh
 
-TESTS=test1.test
+TESTS=test
 
 #
 # Binaries and libraries
@@ -55,7 +55,12 @@ check_PROGRAMS=test
 
 test_SOURCES=\
 	test.c \
+	test_hook.c \
 	$(VOID)
+
+test_hook.c: test.c
+	echo "/* Hook file */" > test_hook.c
+	ar -rs test.a test.c test_hook.c
 
 test_CFLAGS=\
 	$(GIO_CFLAGS) \

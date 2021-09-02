@@ -25,7 +25,10 @@
 
 test
 
+test_hook.c
+test.a
+
 test-suite.log
 
-test1.log
-test1.trs
+test.log
+test.trs
