@@ -182,6 +182,23 @@ peek_stream(AksFile* self,
   GError* tmp_err = NULL;
 
 /*
+ * Reset stream
+ *
+ */
+  g_seekable_seek
+  (G_SEEKABLE(self->base_stream),
+   self->start_position,
+   G_SEEK_SET,
+   cancellable,
+   &tmp_err);
+
+  if G_UNLIKELY(tmp_err != NULL)
+  {
+    g_propagate_error(error, tmp_err);
+    return NULL;
+  }
+
+/*
  * Make archive
  *
  */
@@ -249,6 +266,23 @@ peek_bytes(AksFile* self,
   gboolean success = TRUE;
   GError* tmp_err = NULL;
   GBytes* bytes = NULL;
+
+/*
+ * Reset stream
+ *
+ */
+  g_seekable_seek
+  (G_SEEKABLE(self->base_stream),
+   self->start_position,
+   G_SEEK_SET,
+   cancellable,
+   &tmp_err);
+
+  if G_UNLIKELY(tmp_err != NULL)
+  {
+    g_propagate_error(error, tmp_err);
+    return NULL;
+  }
 
 /*
  * Make archive
