@@ -237,6 +237,21 @@ init_fn(GTask* task,
     goto _error_;
 
 /*
+ * Prepare root
+ *
+ */
+  FileNodeData* data =
+  _aks_node_data_new();
+  FileNode* root = (FileNode*)
+  g_node_new(data);
+  root->data = data;
+
+  data->name = g_strdup("/");
+  data->hash_ = g_str_hash(data->name);
+  data->entry = NULL;
+  self->root = root;
+
+/*
  * Prepare object
  *
  */
@@ -368,6 +383,14 @@ init_fn(GTask* task,
   print_entries(self->root);
 #endif // DEBUG
 
+/*
+ * Ready to receive
+ * filename notify
+ * signal
+ *
+ */
+  g_object_thaw_notify(G_OBJECT(self));
+
 _error_:
   if G_LIKELY(success == TRUE)
     g_task_return_boolean(task, TRUE);
@@ -458,15 +481,14 @@ void aks_file_class_set_property(GObject* pself, guint prop_id, const GValue* va
     self->cache_level = g_value_get_enum(value);
     break;
   case prop_filename:
+    if G_LIKELY
+      (g_strcmp0
+       (g_value_get_string(value),
+        self->filename))
     {
-      GFile* full_ =
-      g_file_new_for_path
-      (g_value_get_string(value));
-
-      FileNode* node =
-      search_node_for_file(self, full_, FALSE, NULL);
-      g_object_unref(full_);
-      self->current = node;
+      g_clear_pointer(&(self->filename), g_free);
+      self->filename = g_value_dup_string(value);
+      g_object_notify_by_pspec(pself, pspec);
     }
     break;
   default:
@@ -565,7 +587,7 @@ void aks_file_class_init(AksFileClass* klass) {
                         "base-stream",
                         G_TYPE_INPUT_STREAM,
                         G_PARAM_READWRITE
-                        | G_PARAM_CONSTRUCT
+                        | G_PARAM_CONSTRUCT_ONLY
                         | G_PARAM_STATIC_STRINGS);
 
   properties[prop_cache_level] =
@@ -575,7 +597,7 @@ void aks_file_class_init(AksFileClass* klass) {
                       AKS_TYPE_CACHE_LEVEL,
                       AKS_CACHE_LEVEL_OTF,
                       G_PARAM_READWRITE
-                      | G_PARAM_CONSTRUCT
+                      | G_PARAM_CONSTRUCT_ONLY
                       | G_PARAM_STATIC_STRINGS);
 
   properties[prop_filename] =
@@ -585,6 +607,7 @@ void aks_file_class_init(AksFileClass* klass) {
                         "/",
                         G_PARAM_READWRITE
                         | G_PARAM_CONSTRUCT
+                        | G_PARAM_EXPLICIT_NOTIFY
                         | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties(oclass,
@@ -593,21 +616,29 @@ void aks_file_class_init(AksFileClass* klass) {
 }
 
 static
-void aks_file_init(AksFile* self) {
-/*
- * Prepare root
- *
- */
-  FileNodeData* data =
-  _aks_node_data_new();
-  FileNode* root = (FileNode*)
-  g_node_new(data);
-  root->data = data;
+void on_filename_notify(AksFile* self) {
+  GFile* full_ =
+  g_file_new_for_path(self->filename);
 
-  data->name = g_strdup("/");
-  data->hash_ = g_str_hash(data->name);
-  data->entry = NULL;
-  self->root = root;
+  FileNode* node =
+  search_node_for_file
+  (self,
+   full_,
+   FALSE,
+   NULL);
+  g_object_unref(full_);
+  self->current = node;
+}
+
+static
+void aks_file_init(AksFile* self) {
+  g_signal_connect
+  (G_OBJECT(self),
+   "notify::filename",
+   G_CALLBACK(on_filename_notify),
+   NULL);
+
+  g_object_freeze_notify(G_OBJECT(self));
 }
 
 /*

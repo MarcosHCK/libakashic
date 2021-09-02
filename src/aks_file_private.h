@@ -45,6 +45,7 @@ struct _AksFile
   /*<private>*/
   GInputStream* base_stream;
   AksCacheLevel cache_level;
+  gchar* filename;
   FileNode* current;
 
   goffset start_position;
