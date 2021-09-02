@@ -44,7 +44,7 @@ void aks_file_fixture_set_up(AksFileFixture* fixture,
   g_assert_no_error(tmp_err);
 
   file = (AksFile*)
-  aks_file_new(stream, AKS_CACHE_LEVEL_OTF, NULL, &tmp_err);
+  aks_file_new(stream, GPOINTER_TO_INT(user_data), "/test.c", NULL, &tmp_err);
 
   g_assert_no_error(tmp_err);
 
@@ -61,22 +61,61 @@ void aks_file_fixture_tear_down(AksFileFixture* fixture,
 }
 
 static
-void aks_file_fixture_test1(AksFileFixture* fixture,
-                            gconstpointer user_data)
+void aks_file_fixture_test_read(AksFileFixture* fixture,
+                                gconstpointer user_data)
 {
-  const gchar* path = g_file_peek_path(G_FILE(fixture->file));
-  g_assert_cmpstr(path, ==, "/");
+  GError* tmp_err = NULL;
+  GInputStream* input = (GInputStream*)
+  g_file_read(G_FILE(fixture->file), NULL, &tmp_err);
+
+  g_assert_no_error(tmp_err);
+
+  GFile* stdout = g_file_new_for_path("/dev/stdout");
+  GOutputStream* output = (GOutputStream*)
+  g_file_append_to(stdout, G_FILE_CREATE_NONE, NULL, &tmp_err);
+  g_object_unref(stdout);
+
+  g_assert_no_error(tmp_err);
+
+  g_output_stream_splice
+  (output,
+   input,
+   G_OUTPUT_STREAM_SPLICE_CLOSE_SOURCE
+   | G_OUTPUT_STREAM_SPLICE_CLOSE_TARGET,
+   NULL,
+   &tmp_err);
+
+  g_assert_no_error(tmp_err);
+
+  g_object_unref(output);
+  g_object_unref(input);
 }
 
 int main(int argc, char* argv[]) {
   g_test_init(&argc, &argv, NULL);
 
   g_test_add
-  ("/libakashic/aks_file",
+  ("/libakashic/aks_file/cache_level_none",
    AksFileFixture,
-   NULL,
+   (gpointer) AKS_CACHE_LEVEL_NONE,
    aks_file_fixture_set_up,
-   aks_file_fixture_test1,
+   aks_file_fixture_test_read,
+   aks_file_fixture_tear_down);
+
+  g_test_add
+  ("/libakashic/aks_file/cache_level_otf",
+   AksFileFixture,
+   (gpointer) AKS_CACHE_LEVEL_OTF,
+   aks_file_fixture_set_up,
+   aks_file_fixture_test_read,
+   aks_file_fixture_tear_down);
+
+  g_test_add
+  ("/libakashic/aks_file/cache_level_full",
+   AksFileFixture,
+   (gpointer) AKS_CACHE_LEVEL_FULL,
+   aks_file_fixture_set_up,
+   aks_file_fixture_test_read,
    aks_file_fixture_tear_down);
 return g_test_run();
 }
