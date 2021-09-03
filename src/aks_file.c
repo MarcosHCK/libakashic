@@ -57,7 +57,9 @@ search_node_for_file(AksFile   *self,
  * Get parent's node
  *
  */
-    FileNode *children, *node =
+    FileNode *children = NULL, *node = NULL;
+
+    node =
     search_node_for_file(self, parent, make, last_);
     if G_UNLIKELY(node == NULL)
     {
@@ -76,20 +78,20 @@ search_node_for_file(AksFile   *self,
  *
  */
     gchar* name = g_file_get_relative_path(parent, full_);
-    FileNodeHash hash_ = g_str_hash(name);
     g_object_unref(parent);
-    FileNodeData* data;
+    g_assert(name != NULL);
+    guint hash_ = g_str_hash(name);
 
     for(children = node->children;
         children != NULL;
         children = children->next)
     {
-      data = children->data;
-      if G_UNLIKELY(data->hash_ == hash_)
+      FileNodeData* data = children->data;
+      if(data->hash_ == hash_)
       {
         gboolean matches =
         g_str_equal(data->name, name);
-        if G_UNLIKELY(matches == TRUE)
+        if(matches == TRUE)
         {
           g_free(name);
           return children;
@@ -105,7 +107,7 @@ search_node_for_file(AksFile   *self,
  */
     if G_UNLIKELY(make == TRUE)
     {
-      data = _aks_node_data_new();
+      FileNodeData* data = _aks_node_data_new();
       children = (FileNode*) g_node_new(data);
       children->data = data;
 
@@ -245,11 +247,20 @@ init_fn(GTask* task,
   FileNode* root = (FileNode*)
   g_node_new(data);
   root->data = data;
+  self->root = root;
 
+  data->entry =
+  archive_entry_new2(NULL);
   data->name = g_strdup("/");
   data->hash_ = g_str_hash(data->name);
-  data->entry = NULL;
-  self->root = root;
+
+  archive_entry_copy_pathname
+  (data->entry,
+   data->name);
+
+  archive_entry_set_filetype
+  (data->entry,
+   AE_IFDIR);
 
 /*
  * Prepare object
@@ -338,7 +349,7 @@ init_fn(GTask* task,
    *
    */
     const gchar* name =
-    archive_entry_pathname_utf8(entry);
+    archive_entry_pathname(entry);
 
     GFile* full_ =
     g_file_new_build_filename
@@ -358,6 +369,7 @@ init_fn(GTask* task,
    * Copy needed data
    *
    */
+    data->entry = archive_entry_clone(entry);
     if(self->cache_level == AKS_CACHE_LEVEL_FULL)
     {
       data->cache =
@@ -372,10 +384,6 @@ init_fn(GTask* task,
         g_task_return_error(task, tmp_err);
         goto_error();
       }
-    }
-    else
-    {
-      data->entry = archive_entry_clone(entry);
     }
   }
 

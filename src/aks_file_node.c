@@ -29,26 +29,31 @@ return data;
 FileNodeData*
 _aks_node_data_ref(FileNodeData* data) {
   g_ref_count_inc(&(data->refs));
+return data;
 }
 
 void
 _aks_node_data_unref(FileNodeData* data) {
-  if(g_ref_count_dec(&(data->refs)))
+  if G_LIKELY(data != NULL)
   {
-  /*
-   * Free data
-   *
-   */
-    g_clear_pointer(&(data->name), g_free);
-    g_clear_pointer(&(data->cache), g_bytes_unref);
-    g_clear_pointer(&(data->entry), archive_entry_free);
+    gboolean zero =
+    g_ref_count_dec(&(data->refs));
+    if(zero == TRUE)
+    {
+    /*
+     * Free data
+     *
+     */
+      g_clear_pointer(&(data->entry), archive_entry_free);
+      g_clear_pointer(&(data->cache), g_bytes_unref);
+      g_clear_pointer(&(data->name), g_free);
 
-  /*
-   * Free data structure
-   *
-   */
-    g_slice_free(FileNodeData, data);
-    g_print("unref\r\n");
+    /*
+     * Free data structure
+     *
+     */
+      g_slice_free(FileNodeData, data);
+    }
   }
 }
 

@@ -58,6 +58,12 @@ struct _AksFile
     {
       struct _FileNodeData
       {
+        grefcount refs;
+
+      /*
+       * ID
+       *
+       */
         gchar* name;
         guint hash_;
 
@@ -67,7 +73,6 @@ struct _AksFile
        */
         GBytes* cache;
         struct archive_entry* entry;
-        grefcount refs;
       } *data;
 
       FileNode* next;

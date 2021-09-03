@@ -16,6 +16,8 @@
  *
  */
 #include <config.h>
+#include <aks_file_enumerator.h>
+#include <aks_file_info.h>
 #include <aks_file_private.h>
 #include <aks_stream.h>
 
@@ -32,13 +34,17 @@ aks_file_g_file_iface_dup(GFile* pself) {
   g_object_new
   (AKS_TYPE_FILE,
    "dup", TRUE,
+   "base-stream", self->base_stream,
+   "cache-level", self->cache_level,
+   "filename", self->filename,
    NULL);
 
 /*
  * Copy entry tree
  *
  */
-  FileNode* root = (FileNode*)
+  dst->root =
+  (FileNode*)
   g_node_copy_deep
   (&(self->root->node_),
    (GCopyFunc)
@@ -46,15 +52,24 @@ aks_file_g_file_iface_dup(GFile* pself) {
    NULL);
 
 /*
+ * Unfreeze notifications
+ *
+ */
+  g_object_thaw_notify(G_OBJECT(dst));
+
+/*
  * Copy other data
  *
  */
-  dst->base_stream = g_object_ref(self->base_stream);
-  dst->cache_level = self->cache_level;
   dst->start_position = self->start_position;
   dst->current = self->current;
-
 return G_FILE(dst);
+}
+
+guint
+aks_file_g_file_iface_get_hash(GFile* pself) {
+  AksFile* self = AKS_FILE(pself);
+return g_str_hash(g_file_peek_path(pself));
 }
 
 static gboolean
@@ -73,29 +88,15 @@ aks_file_g_file_iface_equal(GFile* pself1,
            self2->current->data)));
 }
 
+gboolean
+aks_file_g_file_iface_is_native(GFile* pself) {
+return FALSE;
+}
+
 gchar*
 aks_file_g_file_iface_get_basename(GFile* pself) {
   const gchar* path = g_file_peek_path(pself);
 return g_path_get_basename(path);
-}
-
-GFile*
-aks_file_g_file_iface_get_parent(GFile* pself) {
-  AksFile* self = AKS_FILE(pself);
-
-  if G_UNLIKELY(self->current == NULL)
-    return NULL;
-  if G_UNLIKELY(self->current->parent == NULL)
-    return NULL;
-
-  AksFile* parent = (AksFile*)g_file_dup(pself);
-  parent->current = self->current->parent;
-return G_FILE(parent);
-}
-
-gchar*
-aks_file_g_file_iface_get_parse_name(GFile* pself) {
-return g_utf8_make_valid(g_file_peek_path(pself), -1);
 }
 
 static void
@@ -144,6 +145,25 @@ return g_string_free(path, FALSE);
 }
 
 gchar*
+aks_file_g_file_iface_get_parse_name(GFile* pself) {
+return g_utf8_make_valid(g_file_peek_path(pself), -1);
+}
+
+GFile*
+aks_file_g_file_iface_get_parent(GFile* pself) {
+  AksFile* self = AKS_FILE(pself);
+
+  if G_UNLIKELY(self->current == NULL)
+    return NULL;
+  if G_UNLIKELY(self->current->parent == NULL)
+    return NULL;
+
+  AksFile* parent = (AksFile*)g_file_dup(pself);
+  parent->current = self->current->parent;
+return G_FILE(parent);
+}
+
+gchar*
 aks_file_g_file_iface_get_relative_path(GFile* pself1,
                                         GFile* pself2)
 {
@@ -160,15 +180,74 @@ aks_file_g_file_iface_get_relative_path(GFile* pself1,
 return g_string_free(path, FALSE);
 }
 
-guint
-aks_file_g_file_iface_get_hash(GFile* pself) {
+GFile*
+aks_file_g_file_iface_resolve_relative_path(GFile        *pself,
+                                            const gchar  *relative_path)
+{
   AksFile* self = AKS_FILE(pself);
-return g_str_hash(g_file_peek_path(pself));
+
+  if G_UNLIKELY(self->current == NULL)
+    return NULL;
+  if G_UNLIKELY(g_path_is_absolute(relative_path))
+    relative_path = g_path_skip_root(relative_path);
+
+  GString* path = g_string_sized_new(64 + strlen(relative_path));
+  bringup_path(self->current, NULL, path);
+  g_string_append(path, relative_path);
+
+  AksFile* dup = (AksFile*)
+  g_file_dup(pself);
+
+  g_object_set
+  (dup,
+   "filename", path->str,
+   NULL);
+  g_string_free
+  (path,
+   TRUE);
+return G_FILE(dup);
 }
 
-gboolean
-aks_file_g_file_iface_is_native(GFile* pself) {
-return FALSE;
+GFileEnumerator*
+aks_file_g_file_iface_enumarate_children(GFile *pself,
+                                         const char *attributes,
+                                         GFileQueryInfoFlags flags,
+                                         GCancellable *cancellable,
+                                         GError **error)
+{
+  AksFile* self = AKS_FILE(pself);
+  GFileEnumerator* enumerator = NULL;
+  gboolean success = TRUE;
+  GError* tmp_err = NULL;
+
+  if G_UNLIKELY(self->current == NULL)
+  {
+    g_set_error
+    (error,
+     G_IO_ERROR,
+     G_IO_ERROR_INVAL,
+     "invalid file\r\n");
+    goto_error();
+  }
+
+  enumerator =
+  _aks_file_enumerator_new
+  (self,
+   attributes,
+   flags,
+   cancellable,
+   &tmp_err);
+
+  if G_UNLIKELY(tmp_err != NULL)
+  {
+    g_propagate_error(error, tmp_err);
+    goto_error();
+  }
+
+_error_:
+  if G_UNLIKELY(success == FALSE)
+    g_clear_object(&enumerator);
+return enumerator;
 }
 
 static GInputStream*
@@ -421,18 +500,68 @@ _error_:
 return (GFileInputStream*) result;
 }
 
+static GFileInfo*
+aks_file_g_file_iface_query_info(GFile               *pself,
+                                 const gchar         *attributes,
+                                 GFileQueryInfoFlags  flags,
+                                 GCancellable        *cancellable,
+                                 GError             **error)
+{
+  AksFile* self = AKS_FILE(pself);
+  GFileInfo* info = NULL;
+  gboolean success = TRUE;
+  GError* tmp_err = NULL;
+
+  FileNode* node = self->current;
+  if G_UNLIKELY
+    (node == NULL
+     || node->data->entry == NULL)
+  {
+    g_set_error
+    (error,
+     G_IO_ERROR,
+     G_IO_ERROR_INVAL,
+     "invalid file\r\n");
+    goto_error();
+  }
+
+  GFileAttributeMatcher* matcher = NULL;
+  matcher =
+  g_file_attribute_matcher_new(attributes);
+
+  info =
+  _aks_file_info_get
+  (node->data->entry,
+   matcher,
+   flags,
+   &tmp_err);
+
+  if G_UNLIKELY(tmp_err != NULL)
+  {
+    g_propagate_error(error, tmp_err);
+    goto_error();
+  }
+
+_error_:
+  if G_UNLIKELY(success == FALSE)
+    g_clear_object(&info);
+  g_file_attribute_matcher_unref(matcher);
+return info;
+}
+
 void _aks_file_g_file_iface_init(GFileIface* iface) {
   iface->dup = aks_file_g_file_iface_dup;
-#if 0
-  iface->enumerate_children = aks_file_g_file_iface_enumarate_children;
-#endif // 0
-  iface->equal = aks_file_g_file_iface_equal;
-  iface->get_basename = aks_file_g_file_iface_get_basename;
-  iface->get_parent = aks_file_g_file_iface_get_parent;
-  iface->get_parse_name = aks_file_g_file_iface_get_parse_name;
-  iface->get_path = aks_file_g_file_iface_get_path;
-  iface->get_relative_path = aks_file_g_file_iface_get_relative_path;
   iface->hash = aks_file_g_file_iface_get_hash;
+  iface->equal = aks_file_g_file_iface_equal;
   iface->is_native = aks_file_g_file_iface_is_native;
+  iface->get_basename = aks_file_g_file_iface_get_basename;
+  iface->get_path = aks_file_g_file_iface_get_path;
+  iface->get_parse_name = aks_file_g_file_iface_get_parse_name;
+  iface->get_parent = aks_file_g_file_iface_get_parent;
+  iface->get_relative_path = aks_file_g_file_iface_get_relative_path;
+  iface->resolve_relative_path = aks_file_g_file_iface_resolve_relative_path;
+  iface->enumerate_children = aks_file_g_file_iface_enumarate_children;
   iface->read_fn = aks_file_g_file_iface_read_fn;
+  iface->query_info = aks_file_g_file_iface_query_info;
+  iface->supports_thread_contexts = TRUE;
 }

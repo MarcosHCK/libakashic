@@ -34,7 +34,9 @@ VOID=
 #
 
 EXTRA_DIST+=\
+	aks_file_info.h \
 	aks_file_private.h \
+	aks_stream.h \
 	$(VOID)
 
 #
@@ -62,7 +64,9 @@ libakashic_la_SOURCES=\
 	aks_archive.c \
 	aks_enums.c \
 	aks_file.c \
+	aks_file_enumerator.c \
 	aks_file_iface.c \
+	aks_file_info.c \
 	aks_file_node.c \
 	aks_stream.c \
 	$(VOID)
