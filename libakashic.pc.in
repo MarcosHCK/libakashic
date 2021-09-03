@@ -15,43 +15,15 @@
 # along with libakashic. If not, see <http://www.gnu.org/licenses/>.
 #
 
-#
-# Code::Blocks files
-#
-libakashic.cbp
-libakashic.layout
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
 
-#
-# Build system files
-#
-Makefile
-Makefile.in
-/aclocal.m4
-/autom4te.cache/*
-/compile
-/config.guess
-/config.h.in
-/config.h
-/config.log
-/config.rpath
-/config.status
-/config.sub
-/configure
-/depcomp
-/install-sh
-/libtool
-/ltmain.sh
-/m4/*
-/missing
-/test-driver
+Name: @PACKAGE_NAME@
+Description: GIO-based multi-format archive library
+Requires: glib-2.0 >=  2.64, gobject-2.0 >=  2.64, gio-2.0 >=  2.64
+Version: @PACKAGE_VERSION@
 
-#
-# pkg-config files
-#
-libakashic.pc
-
-#
-# automake stamps
-#
-stamp-*
-*.stamp*
+Libs: -L${libdir} -lakashic
+Cflags: -I${includedir}/@PACKAGE_NAME@/

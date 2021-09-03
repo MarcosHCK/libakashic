@@ -55,6 +55,16 @@ aks_enums.c: $(ENUM_FILES) aks_enums.c.template
 									$(ENUM_FILES)
 
 #
+# Installable headers
+#
+
+pkginclude_HEADERS=\
+	aks_enums.h \
+	aks_file.h \
+	libakashic.h \
+	$(VOID)
+
+#
 # Binaries and libraries
 #
 

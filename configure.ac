@@ -134,6 +134,7 @@ PKG_CHECK_MODULES([LIBARCHIVE], [libarchive])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([
 Makefile
+libakashic.pc
 src/Makefile
 test/Makefile
 ])
